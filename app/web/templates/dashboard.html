@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Telegram AI Assistant — Live Screen</title>
+  <style>
+    :root {
+      --bg-color: #0e1621;
+      --card-bg: #17212b;
+      --card-header: #202b36;
+      --bubble-in: #182533;
+      --bubble-out: #2b5278;
+      --bubble-system: #242f3d;
+      --text-main: #f5f5f5;
+      --text-muted: #7f91a4;
+      --accent: #5288c1;
+      --accent-hover: #659bd4;
+      --green: #4fae60;
+      --red: #e53935;
+      --orange: #f59e0b;
+      --border-color: #242f3d;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Top Bar */
+    header {
+      background-color: var(--card-bg);
+      border-bottom: 1px solid var(--border-color);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand h1 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand .logo-icon {
+      font-size: 22px;
+    }
+
+    .header-status {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+      background-color: var(--card-header);
+      color: var(--text-muted);
+      border: 1px solid var(--border-color);
+    }
+
+    .status-badge.online {
+      background-color: rgba(79, 174, 96, 0.15);
+      color: #62d877;
+      border-color: rgba(79, 174, 96, 0.3);
+    }
+
+    .status-badge.offline {
+      background-color: rgba(229, 57, 53, 0.15);
+      color: #ff6b68;
+      border-color: rgba(229, 57, 53, 0.3);
+    }
+
+    .status-badge.highlight {
+      background-color: rgba(82, 136, 193, 0.15);
+      color: var(--accent);
+      border-color: rgba(82, 136, 193, 0.3);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    button {
+      background-color: var(--card-header);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    button:hover {
+      background-color: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    button.primary {
+      background-color: var(--accent);
+      border-color: var(--accent);
+    }
+
+    button.primary:hover {
+      background-color: var(--accent-hover);
+    }
+
+    /* Main Dual Chat Layout */
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      padding: 16px;
+      overflow: hidden;
+    }
+
+    @media (max-width: 900px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .chat-panel {
+      background-color: var(--card-bg);
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    }
+
+    .chat-header {
+      background-color: var(--card-header);
+      border-bottom: 1px solid var(--border-color);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .bot-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .bot-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #5288c1, #2b5278);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: bold;
+      color: #fff;
+    }
+
+    .bot-details h2 {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .bot-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 2px;
+    }
+
+    .partner-card {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 4px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      font-size: 12px;
+    }
+
+    .chat-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .chat-actions button {
+      padding: 4px 10px;
+      font-size: 12px;
+    }
+
+    /* Message Feed */
+    .message-feed {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background-color: var(--bg-color);
+    }
+
+    .message-feed::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .message-feed::-webkit-scrollbar-thumb {
+      background-color: var(--border-color);
+      border-radius: 3px;
+    }
+
+    .bubble {
+      max-width: 78%;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 14px;
+      line-height: 1.45;
+      word-break: break-word;
+      position: relative;
+    }
+
+    .bubble.outgoing {
+      align-self: flex-end;
+      background-color: var(--bubble-out);
+      color: #fff;
+      border-bottom-right-radius: 2px;
+    }
+
+    .bubble.incoming {
+      align-self: flex-start;
+      background-color: var(--bubble-in);
+      color: var(--text-main);
+      border-bottom-left-radius: 2px;
+    }
+
+    .bubble.system {
+      align-self: center;
+      background-color: var(--bubble-system);
+      color: var(--text-muted);
+      font-size: 12px;
+      padding: 6px 14px;
+      border-radius: 16px;
+      text-align: center;
+      border: 1px solid var(--border-color);
+      max-width: 90%;
+    }
+
+    .bubble-meta {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 4px;
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.6);
+      margin-top: 4px;
+    }
+
+    .bubble.incoming .bubble-meta {
+      color: var(--text-muted);
+    }
+
+    .empty-state {
+      margin: auto;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .empty-state .icon {
+      font-size: 36px;
+      opacity: 0.6;
+    }
+
+    /* Live notification toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background-color: #202b36;
+      border: 1px solid var(--accent);
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      display: none;
+      align-items: center;
+      gap: 10px;
+      z-index: 999;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <span class="logo-icon">⚡</span>
+      <h1>Telegram AI Assistant <span style="font-size: 12px; font-weight: normal; color: var(--text-muted);">Live Screen</span></h1>
+    </div>
+
+    <div class="header-status">
+      <div id="badge-autopilot" class="status-badge online">
+        <span>🤖</span> <span id="text-autopilot">Автопилот: ВКЛ</span>
+      </div>
+      <div id="badge-paused" class="status-badge online">
+        <span>⚡</span> <span id="text-paused">Статус: Активен</span>
+      </div>
+      <div id="badge-model" class="status-badge highlight">
+        <span>🧠</span> <span id="text-model">Модель: LLM</span>
+      </div>
+      <div class="status-badge">
+        <span>⏱</span> <span id="text-time">--:--:--</span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button onclick="triggerAction('search_all')" title="Отправить /search в оба бота">🔎 Искать в обоих</button>
+      <button id="btn-toggle-pause" onclick="togglePause()" title="Пауза / Продолжить">⏸ Пауза</button>
+      <button onclick="fetchChats(true)" title="Обновить сейчас">🔄</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Left Column: @anonrubot -->
+    <section class="chat-panel" id="panel-anonrubot">
+      <div class="chat-header">
+        <div class="bot-info">
+          <div class="bot-avatar">🤖</div>
+          <div class="bot-details">
+            <h2>@anonrubot</h2>
+            <div class="bot-meta">
+              <span id="anonrubot-state" class="status-badge">WAITING</span>
+              <span id="anonrubot-partner" class="partner-card">Собеседник: не найден</span>
+            </div>
+          </div>
+        </div>
+        <div class="chat-actions">
+          <button onclick="sendBotCommand('anonrubot', '/search')">/search</button>
+          <button onclick="sendBotCommand('anonrubot', '/next')">/next</button>
+          <button onclick="sendBotCommand('anonrubot', '/stop')">/stop</button>
+        </div>
+      </div>
+      <div class="message-feed" id="feed-anonrubot">
+        <div class="empty-state">
+          <span class="icon">💬</span>
+          <span>Ожидание сообщений от @anonrubot...</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Column: @anonim -->
+    <section class="chat-panel" id="panel-anonim">
+      <div class="chat-header">
+        <div class="bot-info">
+          <div class="bot-avatar" style="background: linear-gradient(135deg, #ae52c1, #5d2b78);">🎭</div>
+          <div class="bot-details">
+            <h2>@anonim</h2>
+            <div class="bot-meta">
+              <span id="anonim-state" class="status-badge">WAITING</span>
+              <span id="anonim-partner" class="partner-card">Собеседник: не найден</span>
+            </div>
+          </div>
+        </div>
+        <div class="chat-actions">
+          <button onclick="sendBotCommand('anonim', '/search')">/search</button>
+          <button onclick="sendBotCommand('anonim', '/next')">/next</button>
+          <button onclick="sendBotCommand('anonim', '/stop')">/stop</button>
+        </div>
+      </div>
+      <div class="message-feed" id="feed-anonim">
+        <div class="empty-state">
+          <span class="icon">💬</span>
+          <span>Ожидание сообщений от @anonim...</span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast">
+    <span id="toast-icon">🌸</span>
+    <span id="toast-message">Найдена девушка!</span>
+  </div>
+
+  <script>
+    let isPaused = false;
+    let autopilotEnabled = true;
+    let lastRenderedHash = {};
+
+    function updateTime() {
+      const now = new Date();
+      document.getElementById('text-time').textContent = now.toLocaleTimeString();
+    }
+    setInterval(updateTime, 1000);
+    updateTime();
+
+    function showToast(text, icon = '🌸') {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-icon').textContent = icon;
+      document.getElementById('toast-message').textContent = text;
+      toast.style.display = 'flex';
+      setTimeout(() => { toast.style.display = 'none'; }, 4000);
+    }
+
+    async function fetchChats(forceScroll = false) {
+      try {
+        const res = await fetch('/api/chats');
+        if (!res.ok) return;
+        const data = await res.json();
+        renderDashboard(data, forceScroll);
+      } catch (err) {
+        console.error('Failed to fetch chats:', err);
+      }
+    }
+
+    function renderDashboard(data, forceScroll = false) {
+      // Update System Header
+      if (data.status) {
+        autopilotEnabled = data.status.autopilot;
+        isPaused = data.status.is_paused;
+        document.getElementById('text-autopilot').textContent = autopilotEnabled ? 'Автопилот: ВКЛ' : 'Автопилот: ВЫКЛ';
+        document.getElementById('badge-autopilot').className = autopilotEnabled ? 'status-badge online' : 'status-badge offline';
+        
+        document.getElementById('text-paused').textContent = isPaused ? 'Статус: Пауза' : 'Статус: Активен';
+        document.getElementById('badge-paused').className = isPaused ? 'status-badge offline' : 'status-badge online';
+        document.getElementById('btn-toggle-pause').textContent = isPaused ? '▶ Возобновить' : '⏸ Пауза';
+
+        if (data.status.model) {
+          document.getElementById('text-model').textContent = 'Модель: ' + data.status.model;
+        }
+      }
+
+      // Render Bot 1: anonrubot
+      if (data.bots && data.bots.anonrubot) {
+        renderBotPanel('anonrubot', data.bots.anonrubot, forceScroll);
+      }
+
+      // Render Bot 2: anonim
+      if (data.bots && data.bots.anonim) {
+        renderBotPanel('anonim', data.bots.anonim, forceScroll);
+      }
+    }
+
+    function renderBotPanel(botKey, botData, forceScroll) {
+      // State badge
+      const stateEl = document.getElementById(`${botKey}-state`);
+      if (stateEl) {
+        stateEl.textContent = botData.state || 'IDLE';
+        if (botData.state === 'ACTIVE') {
+          stateEl.className = 'status-badge online';
+        } else if (botData.state === 'WAITING_FOR_GENDER') {
+          stateEl.className = 'status-badge highlight';
+        } else {
+          stateEl.className = 'status-badge';
+        }
+      }
+
+      // Partner badge
+      const partnerEl = document.getElementById(`${botKey}-partner`);
+      if (partnerEl) {
+        let partnerDesc = 'Не найден';
+        let genderTag = '';
+        if (botData.gender === 'F') {
+          genderTag = '🌸 Девушка';
+        } else if (botData.gender === 'M') {
+          genderTag = '👔 Парень';
+        }
+
+        const ageTag = botData.age ? `${botData.age} лет` : '';
+        const nameTag = botData.name ? botData.name : '';
+        const userTag = botData.username ? `@${botData.username}` : '';
+
+        const tags = [genderTag, nameTag, ageTag, userTag].filter(Boolean);
+        if (tags.length > 0) {
+          partnerDesc = tags.join(' • ');
+        }
+        partnerEl.textContent = `Собеседник: ${partnerDesc}`;
+      }
+
+      // Messages
+      const feedEl = document.getElementById(`feed-${botKey}`);
+      if (!feedEl) return;
+
+      const messages = botData.messages || [];
+      const messagesHash = JSON.stringify(messages.map(m => m.id + m.text));
+
+      if (lastRenderedHash[botKey] === messagesHash) {
+        return; // No changes
+      }
+      lastRenderedHash[botKey] = messagesHash;
+
+      if (messages.length === 0) {
+        feedEl.innerHTML = `
+          <div class="empty-state">
+            <span class="icon">💬</span>
+            <span>Диалог пока пуст...</span>
+          </div>`;
+        return;
+      }
+
+      let html = '';
+      messages.forEach(msg => {
+        const isOut = msg.direction === 'OUTGOING';
+        const isSystem = Boolean(msg.is_system);
+        const bubbleClass = isSystem ? 'system' : (isOut ? 'outgoing' : 'incoming');
+        
+        const timeStr = msg.time || '';
+        html += `
+          <div class="bubble ${bubbleClass}">
+            <div class="bubble-text">${escapeHtml(msg.text)}</div>
+            ${timeStr ? `<div class="bubble-meta"><span>${timeStr}</span>${isOut ? ' ✓' : ''}</div>` : ''}
+          </div>`;
+      });
+
+      const isNearBottom = feedEl.scrollHeight - feedEl.scrollTop - feedEl.clientHeight < 150;
+      feedEl.innerHTML = html;
+      if (forceScroll || isNearBottom) {
+        feedEl.scrollTop = feedEl.scrollHeight;
+      }
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\n/g, '<br>');
+    }
+
+    async function sendBotCommand(bot, command) {
+      try {
+        const res = await fetch('/api/action', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bot, command })
+        });
+        const result = await res.json();
+        showToast(`Отправлено: ${command} в @${bot}`, '🚀');
+        setTimeout(() => fetchChats(true), 800);
+      } catch (err) {
+        console.error('Failed to send command:', err);
+      }
+    }
+
+    async function triggerAction(action) {
+      try {
+        await fetch('/api/action', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action })
+        });
+        showToast('Команда выполнена', '⚡');
+        setTimeout(() => fetchChats(true), 1000);
+      } catch (err) {
+        console.error('Action failed:', err);
+      }
+    }
+
+    async function togglePause() {
+      const cmd = isPaused ? '/resume' : '/pause';
+      try {
+        await fetch('/api/action', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ command: cmd })
+        });
+        showToast(isPaused ? 'Бот возобновлен' : 'Бот поставлен на паузу', '⏸');
+        setTimeout(() => fetchChats(true), 500);
+      } catch (err) {
+        console.error('Toggle pause failed:', err);
+      }
+    }
+
+    // Connect to Server-Sent Events (SSE) for instant live updates
+    function setupSSE() {
+      try {
+        const evtSource = new EventSource('/api/stream');
+        evtSource.onmessage = function(event) {
+          try {
+            const data = JSON.parse(event.data);
+            if (data.type === 'update') {
+              fetchChats();
+            } else if (data.type === 'female_found') {
+              showToast(`🌸 Найдена девушка в @${data.bot || 'чате'}!`, '🎉');
+            }
+          } catch (e) {
+            console.error('SSE parse error:', e);
+          }
+        };
+        evtSource.onerror = function() {
+          evtSource.close();
+          // Retry SSE in 5 seconds
+          setTimeout(setupSSE, 5000);
+        };
+      } catch (e) {
+        console.warn('SSE not supported or failed:', e);
+      }
+    }
+
+    // Initialize
+    fetchChats(true);
+    setupSSE();
+    // Fallback polling every 2.5 seconds
+    setInterval(() => fetchChats(false), 2500);
+  </script>
+</body>
+</html>
